@@ -1,6 +1,7 @@
 import React, {useState, useRef, useEffect} from 'react'
 import * as esbuild from 'esbuild-wasm'
 import { unpkgPathPlugin } from '../plugins/unpkg-path-plugin';
+import { fetchPlugin } from '../plugins/fetch-plugin';
 
 
 const CodeEditor = () => {
@@ -37,7 +38,10 @@ const CodeEditor = () => {
                 entryPoints: ['index.js'],
                 bundle: true,
                 write: false,
-                plugins: [unpkgPathPlugin()],
+                plugins: [
+                    unpkgPathPlugin(),
+                    fetchPlugin(input)
+                ],
                 define: {
                     'process.env.NODE_ENV': '"production"',
                     global: 'window',
