@@ -1,5 +1,6 @@
 import React, {useState, useRef, useEffect} from 'react'
 import * as esbuild from 'esbuild-wasm'
+import { unpkgPathPlugin } from '../plugins/unpkg-path-plugin';
 
 
 const CodeEditor = () => {
@@ -10,6 +11,7 @@ const CodeEditor = () => {
 
     const startService = async () => {
         esbuild.initialize({
+            worker: true,
             wasmURL: '/esbuild.wasm'
         }).then(()=> {
             console.log("Initialised")
@@ -17,7 +19,12 @@ const CodeEditor = () => {
     };
 
     useEffect(()=> {
-        startService();
+        try {
+            startService();
+        }catch(err){
+            console.error(err);
+        }
+        
     }, [])
 
     const onClick = async () => {
@@ -25,8 +32,19 @@ const CodeEditor = () => {
         esbuild.transform(input, {
             loader: 'jsx',
             target: 'es2015'
-        }).then((result) => {
-            setCode(result.code)
+        }).then(() => {
+            esbuild.build({
+                entryPoints: ['index.js'],
+                bundle: true,
+                write: false,
+                plugins: [unpkgPathPlugin()],
+                define: {
+                    'process.env.NODE_ENV': '"production"',
+                    global: 'window',
+                }
+            }).then((result) => {
+                setCode(result.outputFiles[0].text)
+            })
         })
     }
 
