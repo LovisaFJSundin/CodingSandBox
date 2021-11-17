@@ -7,6 +7,7 @@ import { fetchPlugin } from '../plugins/fetch-plugin';
 const CodeEditor = () => {
 
     const ref = useRef<any>();
+    const iframe = useRef<any>();
     const [input, setInput] = useState('');
     const [code, setCode] = useState('');
 
@@ -29,7 +30,9 @@ const CodeEditor = () => {
     }, [])
 
     const onClick = async () => {
-        console.log(input);
+        
+        iframe.current.srcdoc = html;
+
         esbuild.transform(input, {
             loader: 'jsx',
             target: 'es2015'
@@ -47,10 +50,31 @@ const CodeEditor = () => {
                     global: 'window',
                 }
             }).then((result) => {
-                setCode(result.outputFiles[0].text)
+                //setCode()
+                iframe.current.contentWindow.postMessage(result.outputFiles[0].text, '*');
             })
         })
     }
+
+    const html = `
+        <html>
+            <head></head>
+            <body>
+                <div id="root"></div>
+                <script>
+                window.addEventListener('message', (event)=> {
+                    try {
+                        eval(event.data);
+                    } catch (err) {
+                        const root = document.querySelector('#root');
+                        root.innerHTML = '<div className="error">' + err + '</div>'
+                        console.error(err);
+                    }
+                }, false);
+                </script>
+            </body>
+        </html>
+    `;
 
 
     return (
@@ -59,7 +83,7 @@ const CodeEditor = () => {
         <div>
             <button onClick={onClick}>Submit</button>
         </div>
-        <pre>{code}</pre>
+        <iframe title="preview" ref={iframe} sandbox="allow-scripts" srcDoc={html} />
         </div>
     )
 }
