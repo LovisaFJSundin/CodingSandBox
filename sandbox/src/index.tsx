@@ -1,9 +1,9 @@
 import ReactDOM from 'react-dom'
-import CodeEditor from './components/CodeEditor';
+import IDEComponent from './components/IDEComponent';
 
 const App = () => {
  
-    return <CodeEditor />;
+    return <IDEComponent />;
 }
 
 ReactDOM.render(
